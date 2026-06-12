@@ -1,4 +1,7 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 require_once 'db_connect.php';
 
 $error = '';
@@ -23,8 +26,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // SECURE HASHING: Encrypts the password securely before entering the database
             $hashed_password = password_hash($password, PASSWORD_BCRYPT);
             
-            // Database query inserting username, email, securely hashed password, and role_id
-            $insert = $conn->prepare("INSERT INTO users (username, email, password, role_id) VALUES (?, ?, ?, ?)");
+            // CORRECTED DATABASE QUERY: targets 'password_hash' to align with the production schema
+            $insert = $conn->prepare("INSERT INTO users (username, email, password_hash, role_id) VALUES (?, ?, ?, ?)");
             $insert->bind_param("sssi", $username, $email, $hashed_password, $role_id);
             
             if ($insert->execute()) {
@@ -195,7 +198,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    // Locate the registration form structure
     const registrationForm = document.querySelector("form[action='register.php']");
     
     if (registrationForm) {
@@ -207,7 +209,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             // Security Rule 1: Password cannot match the username string
             if (passwordValue.toLowerCase() === usernameValue.toLowerCase()) {
-                event.preventDefault(); // Stop the form from submitting to PHP
+                event.preventDefault(); 
                 alert("❌ Registration Error: Security constraints require your password to be different from your username.");
                 passwordField.focus();
                 return false;
@@ -215,7 +217,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             // Security Rule 2: Enforce a secure password length
             if (passwordValue.length < 6) {
-                event.preventDefault(); // Stop the form from submitting to PHP
+                event.preventDefault(); 
                 alert("❌ Registration Error: Password must be at least 6 characters long.");
                 passwordField.focus();
                 return false;
