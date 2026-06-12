@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $hashed_password = password_hash($password, PASSWORD_BCRYPT);
             
             // CORRECTED DATABASE QUERY: targets 'password_hash' to align with the production schema
-            $insert = $conn->prepare("INSERT INTO users (username, email, password_hash, role_id) VALUES (?, ?, ?, ?)");
+            $insert = $conn->prepare("INSERT INTO users (username, email, password, role_id) VALUES (?, ?, ?, ?)");
             $insert->bind_param("sssi", $username, $email, $hashed_password, $role_id);
             
             if ($insert->execute()) {
