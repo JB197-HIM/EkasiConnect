@@ -3,11 +3,11 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Live Production Database Configuration - InfinityFree
-$host    = 'sql311.infinityfree.com'; 
-$db_user = 'if0_38356821'; 
-$db_pass = 'K9m2PqW7tZ5x'; 
-$db_name = 'if0_38356821_ekasi_db';   
+// Live Production Database Configuration - MATCHING ACCOUNT if0_42161547
+$host    = 'sql210.infinityfree.com'; 
+$db_user = 'if0_42161547'; 
+$db_pass = 'idG2ZFkuE1QFv'; // Your exact vPanel password from image_bf0117.jpg
+$db_name = 'if0_42161547_EkasiConnect';   
 
 $conn = new mysqli($host, $db_user, $db_pass, $db_name);
 
@@ -20,7 +20,7 @@ function log_system_action($conn, $action_type, $action_details) {
     if (isset($_SESSION['user_id'])) {
         $operator_id = $_SESSION['user_id'];
         
-        // SQL parameters to perfectly match real database schema columns
+        // Corrected SQL parameters to perfectly match your real database schema columns
         $stmt = $conn->prepare("INSERT INTO audit_logs (action, description, performed_by) VALUES (?, ?, ?)");
         $stmt->bind_param("ssi", $action_type, $action_details, $operator_id);
         $stmt->execute();
