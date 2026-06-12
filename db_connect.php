@@ -3,10 +3,10 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Live Production Database Configuration
+// Verified Production Database Configuration
 $host    = 'sql210.infinityfree.com'; 
 $db_user = 'if0_42161547'; 
-$db_pass = 'idG2ZFkuE1QFv'; 
+$db_pass = 'idG2ZfKuElQFv'; // EXACT MATCH FROM YOUR DASHBOARD EYE-ICON
 $db_name = 'if0_42161547_ekasi_db';   
 
 $conn = new mysqli($host, $db_user, $db_pass, $db_name);
