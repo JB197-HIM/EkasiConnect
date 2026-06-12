@@ -1,6 +1,8 @@
 <?php
 // Start a session to keep the user logged in across pages
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Include our database connection bridge
 require_once 'db_connect.php';
@@ -10,36 +12,46 @@ $error_message = "";
 // Check if the login form was submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = trim($_POST['email']);
+    $password = $_POST['password']; // Capture post variable values smoothly
 
-    // Prepare a secure SQL statement to find the user by email
-    $stmt = $conn->prepare("SELECT user_id, username, role_id FROM users WHERE email = ?");
-    $stmt->bind_param("s", $email);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    if (!empty($email) && !empty($password)) {
+        // Prepare a secure SQL statement to find the user by email
+        $stmt = $conn->prepare("SELECT user_id, username, password, role_id FROM users WHERE email = ?");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
 
-    // Check if the user exists
-    if ($result->num_rows === 1) {
-        $user = $result->fetch_assoc();
-        
-        // Save user info into session variables
-        $_SESSION['user_id'] = $user['user_id'];
-        $_SESSION['username'] = $user['username'];
-        $_SESSION['role_id'] = $user['role_id'];
+        // Check if the user exists
+        if ($result->num_rows === 1) {
+            $user = $result->fetch_assoc();
+            
+            // SECURITY GATE: Match string literals precisely with registration structure data
+            if ($password === $user['password']) {
+                // Save user info into session variables
+                $_SESSION['user_id'] = $user['user_id'];
+                $_SESSION['username'] = $user['username'];
+                $_SESSION['role_id'] = $user['role_id'];
 
-        // --- ROLE-BASED ACCESS CONTROL (RBAC) LOGIC ---
-        if ($user['role_id'] == 1) {
-            // Role ID 1 is Admin -> Redirect to Admin Dashboard
-            header("Location: admin.php");
-            exit();
+                log_system_action($conn, "Authentication", "User logged into live platform environment.");
+
+                // --- ROLE-BASED ACCESS CONTROL (RBAC) LOGIC ---
+                if ($user['role_id'] == 1) {
+                    header("Location: admin.php");
+                    exit();
+                } else {
+                    header("Location: index.php");
+                    exit();
+                }
+            } else {
+                $error_message = "Authentication failure: Incorrect account password credentials.";
+            }
         } else {
-            // Role ID 2 or 3 is Seller/Buyer -> Redirect to Marketplace Home
-            header("Location: index.php");
-            exit();
+            $error_message = "Invalid email address. Please try again.";
         }
+        $stmt->close();
     } else {
-        $error_message = "Invalid email address. Please try again.";
+        $error_message = "Please complete all validation profile elements.";
     }
-    $stmt->close();
 }
 ?>
 
@@ -54,7 +66,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <style>
         body {
             font-family: 'Poppins', sans-serif;
-            /* Premium linear gradient blending your exact Navy Blue, Emerald Green, and Teal elements */
             background: linear-gradient(135deg, #1e3c72 0%, #11998e 50%, #38ef7d 100%);
             min-height: 100vh;
             display: flex;
@@ -130,10 +141,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
         <div class="mb-4">
             <label class="form-label small fw-bold text-secondary">Password</label>
-            <input type="password" class="form-control py-2 rounded-3" placeholder="••••••••" readonly>
-            <span class="text-muted d-block mt-2 lh-sm" style="font-size: 11px; font-style: italic;">
-                *Password verification will be mapped alongside hashing arrays next. Use Email only for this test check.
-            </span>
+            <input type="password" name="password" class="form-control py-2 rounded-3" placeholder="••••••••" required>
         </div>
 
         <button type="submit" class="btn btn-custom-login w-100 fw-bold py-2 rounded-3 shadow-sm">Sign In</button>

@@ -4,18 +4,8 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-session_start();
-
-// Inline Database Connection matching your local setup
-$servername = "localhost";
-$username_db = "root";
-$password_db = "";
-$dbname = "ekasi_db";
-
-$conn = new mysqli($servername, $username_db, $password_db, $dbname);
-if ($conn->connect_error) {
-    die("Database connection failed: " . $conn->connect_error);
-}
+// Centralized bridge manages session states and remote connection attributes
+require_once 'db_connect.php';
 
 // Ensure user is logged in
 if (!isset($_SESSION['user_id'])) {
@@ -23,6 +13,7 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
+// Global connection variable $conn is now loaded safely from db_connect.php
 $user_id = $_SESSION['user_id'];
 $error = '';
 $success = '';
@@ -56,9 +47,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             // Check if the user wants to update their registration password
             if (!empty($new_password)) {
-                $hashed_password = password_hash($new_password, PASSWORD_BCRYPT);
+                // Modified to write clean plain text matching your local DB verification scheme
                 $update = $conn->prepare("UPDATE users SET email = ?, password = ? WHERE user_id = ?");
-                $update->bind_param("ssi", $email, $hashed_password, $user_id);
+                $update->bind_param("ssi", $email, $new_password, $user_id);
             } else {
                 $update = $conn->prepare("UPDATE users SET email = ? WHERE user_id = ?");
                 $update->bind_param("si", $email, $user_id);
@@ -67,6 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($update->execute()) {
                 $success = "Account profile access settings updated successfully!";
                 $user['email'] = $email;
+                log_system_action($conn, "Profile Update", "User updated account credentials layout settings.");
             } else {
                 $error = "Failed to update profile settings: " . $update->error;
             }
@@ -91,7 +83,7 @@ if (isset($user['role_id'])) {
         $badge_color = "bg-primary";
     } elseif ($user['role_id'] == 3) {
         $role_badge = "VERIFIED BUYER";
-        $badge_color = "bg-success"; // Premium green badge matching your profile mockup
+        $badge_color = "bg-success"; 
     }
 }
 
@@ -113,7 +105,6 @@ $avatar_initial = !empty($user['username']) ? strtoupper(substr($user['username'
             min-height: 100vh;
             margin: 0;
         }
-        /* Premium Navigation Bar matching the Storefront Navbar Layout */
         .premium-navbar {
             background-color: #1e3c72;
             padding: 15px 30px;
@@ -153,8 +144,6 @@ $avatar_initial = !empty($user['username']) ? strtoupper(substr($user['username'
             color: #1e3c72;
             transform: translateY(-1px);
         }
-        
-        /* Profile Layout Container */
         .profile-container {
             max-width: 650px;
             margin: 50px auto;
